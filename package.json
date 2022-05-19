@@ -18,7 +18,9 @@
     "react-native-web": "0.17.7",
     "expo-camera": "~12.2.0",
     "expo-contacts": "~10.2.0",
-    "expo-sensors": "~11.3.0"
+    "expo-sensors": "~11.3.0",
+    "webpack-dev-server": "~3.11.0",
+    "@expo/webpack-config": "~0.16.2"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"
