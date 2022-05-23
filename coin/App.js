@@ -4,8 +4,6 @@ import { Platform } from 'react-native-web';
 import CurrentPrice from './src/components/CurrentPrice';
 import HystoryGraphic from './src/components/HystoryGraphic';
 import QuotationsList from './src/components/QuotationsList';
-import QuotationsItems from './src/components/QuotationsList/QuotationsItems';
-
 
 function addZero(number){
   if(number <= 9){
@@ -16,39 +14,39 @@ function addZero(number){
 
 function url(qtdDays){
   const date = new Date();
-  const listLastDays = qtdDays
+  const listLastDays = qtdDays;
   const end_date = 
-  `${date.getFullYear()}-${addZero(date.getMonth()+1)}-${(addZero(date.getDate))}`;
-  date.setDate(date.getDate() - listLastDays)
+  `${date.getFullYear()}-${addZero(date.getMonth() + 1)}-${addZero(date.getDate())}`;
+  date.setDate(date.getDate() - listLastDays);
   const start_date = 
-  `${date.getFullYear()}-${addZero(date.getMonth()+1)}-${(addZero(date.getDate))}`;
-
-  return `https://api.coindesk.com/v1/bpi/historical/close.json?start=${start_date}&end=${end_date}`
+  `${date.getFullYear()}-${addZero(date.getMonth() + 1)}-${addZero(date.getDate())}`;
+  //URL  GET API
+  return `https://api.coindesk.com/v1/bpi/historical/close.json?start=${start_date}&end=${end_date}`;;
 }
 
 async function getListCoins(url){
   let response = await fetch(url);
-  let returnApi = await response.json()
-  let selectListQuotations = returnApi.bpi
-  const queryCoinsList = Object.keys(selectListQuotations).map((key) =>{
-    return{
-      data: key.split(".").reverse().join("/"),
-      valor: selectListQuotations[key]
-    }
-  })
+  let retunrApi = await response.json();
+  let selectListQuotations = retunrApi.bpi;
+  const queryCoinsList = Object.keys(selectListQuotations).map((key) => {
+    return {
+      data: key.split("-").reverse().join("/"),
+      valor: selectListQuotations[key],
+    };
+  });
   let data = queryCoinsList.reverse();
-  return data
+  return data;
 }
 
 async function getPriceCoinsGraphic(url){
   let responseG = await fetch(url);
-  let returnApiG = await responseG.json()
-  let selectListQuotationsG = returnApiG.bpi
-  const queryCoinsList = Object.keys(selectListQuotationsG).map((key) =>{
-    selectListQuotationsG[key]
+  let returnApiG = await responseG.json();
+  let selectListQuotationsG = returnApiG.bpi;
+  const queryCoinsListG = Object.keys(selectListQuotationsG).map((key) => {
+    return selectListQuotationsG[key];
   });
-  let dataG = queryCoinsList;
-  return dataG
+  let dataG = queryCoinsListG;
+  return dataG;
 }
 
 export default function App() {
@@ -57,10 +55,15 @@ export default function App() {
   const [coisGraphicList, setCoinsGraphicList] = useState([0])
   const [days, setDays] = useState(30)
   const [updateData, setUpdateData] = useState(true)
+  const [price, setPrice] = useState()
 
   function updateDay(number){
     setDays(number);
     setUpdateData(true)
+  }
+
+  function priceCotation(){
+    setPrice(coisGraphicList.pop())
   }
 
   useEffect(() =>{
@@ -72,26 +75,22 @@ export default function App() {
       setCoinsGraphicList(dataG)
     });
 
+    priceCotation()
+
     if(updateData){
       setUpdateData(false)
     }
 
   }, [updateData]);
-
+//<HystoryGraphic infoDataGraphic={coisGraphicList}/>
+//<CurrentPrice lastCotation={price}/>
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar
       backgroundColor="#f50d41"
       barStyle="dark-content"
       />
-
-      <CurrentPrice/>
-
-      <HystoryGraphic/>
-
-      <QuotationsList/>
-
-      <QuotationsItems/>
+      <QuotationsList filterDay={updateDay} listTransactions={coinsList}/>
 
     </SafeAreaView>
   );

@@ -1,0 +1,5 @@
+eas build --profile preview --apk
+expo build:android -t apk  --apk curso
+
+npm install -g eas-cli     
+>> eas build -p android --bundle
