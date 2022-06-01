@@ -1,98 +1,100 @@
 import React, { useEffect, useState } from 'react'
 import { StyleSheet, StatusBar, Text, View, SafeAreaView } from 'react-native';
 import { Platform } from 'react-native-web';
-import CurrentPrice from './src/components/CurrentPrice';
-import HystoryGraphic from './src/components/HystoryGraphic';
-import QuotationsList from './src/components/QuotationsList';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Main from './Main';
+import { NavigationContainer } from '@react-navigation/native';
+import { useContext } from 'react';
+import * as WebBrowser from 'expo-web-browser';
+const Tab = createBottomTabNavigator()
+import Context from './context'
+WebBrowser.maybeCompleteAuthSession();
+import storage from './storage';
+import {setItemAsync, getItemAsync} from 'expo-secure-store';
+import * as Google from 'expo-auth-session/providers/google';
 
-function addZero(number){
-  if(number <= 9){
-    return '0'+number
-  }
-  return number;
-}
+const MY_SECURE_AUTH_STATE_KEY = 'MySecureAuthStateKey';
 
-function url(qtdDays){
-  const date = new Date();
-  const listLastDays = qtdDays;
-  const end_date = 
-  `${date.getFullYear()}-${addZero(date.getMonth() + 1)}-${addZero(date.getDate())}`;
-  date.setDate(date.getDate() - listLastDays);
-  const start_date = 
-  `${date.getFullYear()}-${addZero(date.getMonth() + 1)}-${addZero(date.getDate())}`;
-  //URL  GET API
-  return `https://api.coindesk.com/v1/bpi/historical/close.json?start=${start_date}&end=${end_date}`;;
-}
-
-async function getListCoins(url){
-  let response = await fetch(url);
-  let retunrApi = await response.json();
-  let selectListQuotations = retunrApi.bpi;
-  const queryCoinsList = Object.keys(selectListQuotations).map((key) => {
-    return {
-      data: key.split("-").reverse().join("/"),
-      valor: selectListQuotations[key],
-    };
+function Login(){
+  const [autenticado, setAutenticado] = useContext(Context);
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    expoClientId: 'GOOGLE_GUID.apps.googleusercontent.com',
+    iosClientId: 'GOOGLE_GUID.apps.googleusercontent.com',
+    androidClientId: 'GOOGLE_GUID.apps.googleusercontent.com',
+    webClientId: '320850868858-1773glg6pgs2qs72r4i6ae4cak3743aq.apps.googleusercontent.com',
   });
-  let data = queryCoinsList.reverse();
-  return data;
+
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+        const { authentication } = response;
+        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                Authorization: 'Bearer ' + authentication.accessToken,
+                'Content-Type': 'application/json'
+            },
+        })
+            .then((response) => {
+                return response.json();
+            })
+            .then((json) => {
+              const str = {
+                email: json.email, 
+                nome: json.name,
+                foto: json.picture
+              };
+              setAutenticado(str);
+              setItemAsync(MY_SECURE_AUTH_STATE_KEY, JSON.stringify(str))
+              .then(() => {
+                alert('Armazenado');
+              })
+            })
+           /* .then((json)=>{
+                setAutenticado({
+                    email: json.email,
+                    nome: json.name
+                });
+            });*/
+    }
+}, [response]);
+
+return (
+    <View style={styles.main}>
+        <Button
+            title="Logar com Google"
+            onPress={() => {
+                promptAsync();
+            }}
+        />
+    </View>
+
+);
 }
 
-async function getPriceCoinsGraphic(url){
-  let responseG = await fetch(url);
-  let returnApiG = await responseG.json();
-  let selectListQuotationsG = returnApiG.bpi;
-  const queryCoinsListG = Object.keys(selectListQuotationsG).map((key) => {
-    return selectListQuotationsG[key];
-  });
-  let dataG = queryCoinsListG;
-  return dataG;
-}
+function Decide(){
+  const [autenticado] = React.useContext(Context);
+  if(!autenticado?.email)
+    return <Main />
+  else
+    return <Main />
+};
+
 
 export default function App() {
 
-  const [coinsList, setCoinsList] = useState([])
-  const [coisGraphicList, setCoinsGraphicList] = useState([0])
-  const [days, setDays] = useState(30)
-  const [updateData, setUpdateData] = useState(true)
-  const [price, setPrice] = useState()
-
-  function updateDay(number){
-    setDays(number);
-    setUpdateData(true)
-  }
-
-  function priceCotation(){
-    setPrice(coisGraphicList.pop())
-  }
-
-  useEffect(() =>{
-    getListCoins(url(days)).then((data) => {
-      setCoinsList(data)
-    });
-
-    getPriceCoinsGraphic(url(days)).then((dataG) => {
-      setCoinsGraphicList(dataG)
-    });
-
-    priceCotation()
-
-    if(updateData){
-      setUpdateData(false)
-    }
-
-  }, [updateData]);
-//<HystoryGraphic infoDataGraphic={coisGraphicList}/>
-//<CurrentPrice lastCotation={price}/>
+ 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar
-      backgroundColor="#f50d41"
-      barStyle="dark-content"
-      />
-      <QuotationsList filterDay={updateDay} listTransactions={coinsList}/>
-
-    </SafeAreaView>
+    <NavigationContainer>
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false
+      }}
+    >
+      <Tab.Screen name="Home" component={Decide}/>
+    </Tab.Navigator>
+    </NavigationContainer>
   );
 }
 
