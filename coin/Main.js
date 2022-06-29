@@ -4,6 +4,8 @@ import { Platform } from 'react-native-web';
 import CurrentPrice from './src/components/CurrentPrice';
 import HystoryGraphic from './src/components/HystoryGraphic';
 import QuotationsList from './src/components/QuotationsList';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 function addZero(number){
   if(number <= 9){
@@ -51,11 +53,31 @@ async function getPriceCoinsGraphic(url){
 
 export default function Main({navigation}) {
 
+
   const [coinsList, setCoinsList] = useState([])
   const [coisGraphicList, setCoinsGraphicList] = useState([0])
   const [days, setDays] = useState(30)
   const [updateData, setUpdateData] = useState(true)
   const [price, setPrice] = useState()
+
+  const storeUser = async () => {
+    try {
+      await AsyncStorage.setItem("lastC", coisGraphicList.pop().toString());
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getUser = async () => {
+    try {
+      const savedUser = await AsyncStorage.getItem("lastC");
+      const lastc = JSON.parse(savedUser);
+      setPrice(lastc);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
 
   function updateDay(number){
     setDays(number);
@@ -75,7 +97,14 @@ export default function Main({navigation}) {
       setCoinsGraphicList(dataG)
     });
 
-    priceCotation()
+    if(price == null){
+      setPrice(coisGraphicList.pop())
+      storeUser()
+    }
+    else{
+      getUser()
+    }
+    
 
     if(updateData){
       setUpdateData(false)
@@ -83,13 +112,21 @@ export default function Main({navigation}) {
 
   }, [updateData]);
 //<HystoryGraphic infoDataGraphic={coisGraphicList}/>
-//<CurrentPrice lastCotation={price}/>
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar
       backgroundColor="#f50d41"
       barStyle="dark-content"
       />
+      <Text>aqui {price}</Text>
+      {
+        price == null?
+        <CurrentPrice lastCotation={coisGraphicList.pop()}/>
+        :
+        <CurrentPrice lastCotation={price}/>
+      }
+      
       <QuotationsList filterDay={updateDay} listTransactions={coinsList}/>
 
     </SafeAreaView>

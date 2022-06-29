@@ -9,19 +9,20 @@ export default function QuotationsList (props) {
     return(
         <Fragment>
             <View style={styles.filters}>
-                <TouchableOpacity
+                {/*<TouchableOpacity
                     style={styles.buttonQuery}
                     onPress={() => daysQuery(7)}
                 >
                     <Text style={styles.textButtonQuery}>7D</Text>
                 </TouchableOpacity>
+    
 
                 <TouchableOpacity
                     style={styles.buttonQuery}
                     onPress={() => daysQuery(15)}
                 >
                     <Text style={styles.textButtonQuery}>15D</Text>
-                </TouchableOpacity>
+                </TouchableOpacity>*/}
 
                 <TouchableOpacity
                     style={styles.buttonQuery}
